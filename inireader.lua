@@ -4,37 +4,34 @@
 
 local inireader = {}
 
-inireader.map = { [""] = {} }
-
-local clear(buffer)
-	for i = 1, #buffer do
+local function clear(buffer)
+	for i in pairs(buffer) do
 		buffer[i] = nil
 	end
 end
 
-function inireader.del(this)
-	for i = 1, #this.map do
-		this[i] = nil
+function inireader:add(category, name, value)
+	if (self[category] == nil) then
+		self[category] = {}
 	end
+	self[category][name] = value
 end
 
-function inireader.add(this, category, name, value)
-	if (this[category] == nil) then
-		this[category] = {}
-	end
-	this[category][name] = value
-end
-
-function inireader.get(this, category, name, default)
-	if (this[category] == nil or this[category][name] == nil) then
+function inireader:get(category, name, default)
+	if (self[category] == nil or self[category][name] == nil) then
 		return default
 	else
-		return this[category][name]
+		return self[category][name]
 	end
 end
 
-function inireader.new(this, path)
+function inireader:new(path)
 	local file = io.open(path)
+	
+	local map = { [""] = {} }
+	setmetatable(map, self)
+	self.__index = self
+	
 	
 	local buffer = {""}
 	
@@ -48,9 +45,10 @@ function inireader.new(this, path)
 			for i = 2, #line do
 				local c = line:sub(i,i)
 				if (c == ']') then
-					--fill 'category' with the
-					--contents of buffer, clear it
-					--and exit the loop
+					--[[
+						Fill 'category' with the contents of buffer, 
+						clear it and exit the loop.
+					--]]
 					category = table.concat(buffer)
 					clear(buffer)
 					break
@@ -62,16 +60,20 @@ function inireader.new(this, path)
 			for i = 1, #line do
 				--each character in the current line
 				local c = line:sub(i,i)
-				--fill 'name' with the buffer,
-				--clear it and move to the next character
+				--[[
+					Fill 'name' with the buffer,
+					clear it and move to the next character.
+				--]]
 				if (c == '=') then
 					name = table.concat(buffer)
 					clear(buffer)
 				else
 					table.insert(buffer, c)
-					--if we're on the last character,
-					--fill 'value' with the buffer,
-					--clear it and break the loop
+					--[[
+						If we're on the last character,
+						fill 'value' with the buffer,
+						clear it and break the loop.
+					--]]
 					if (i == #line) then
 						value = table.concat(buffer)
 						break
@@ -80,12 +82,12 @@ function inireader.new(this, path)
 			end
 			clear(buffer)
 			--each line in the file
-			this:add(category, name, value)
+			map:add(category, name, value)
 		end
 	end
 	
 	file:close()
-	
+	return map
 end
 
 return inireader
