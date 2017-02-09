@@ -3,9 +3,9 @@ INI file parser for Lua.
 
 Usage:
 
-'''lua
+```lua
 require 'inireader'
 
 local ini = inireader:new("/path/to/file.ini")
 print(ini:get("category", "name", "defaultValue"))
-'''
+```
